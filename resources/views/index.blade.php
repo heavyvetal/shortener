@@ -18,8 +18,11 @@ content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=
             background: #fff;
             text-align: center;
         }
-        #result, #copy {
+        #result, #copy, #error {
             display: none;
+        }
+        #error {
+            color: #ff0000;
         }
     </style>
 </head>
@@ -34,6 +37,9 @@ content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=
                 <label for="shorten-url">Your shortened URL</label>
                 <input id="shorten-url" type="text" class="form-control">
             </div>
+            <div id="error" class="form-group">
+            </div>
+
             <button type="submit" class="btn btn-primary">Submit</button>
             <button id="copy" type="button" class="btn btn-primary">Copy</button>
         </form>
@@ -43,30 +49,33 @@ content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=
         $(document).ready(function () {
             $('#shortener-form').on('submit', function(event) {
                 event.preventDefault();
-
-                let url = $('#incoming-url').val();
-
                 $.ajax({
                     url: "/shortener",
                     type: "POST",
                     data: {
                         "_token": "{{ csrf_token() }}",
-                        url: url
+                        url: $('#incoming-url').val()
                     },
                     success: function(response){
                         let parsed_response = JSON.parse(response);
 
                         if (parsed_response.success) {
                             $('#shorten-url').val(parsed_response.short_url);
-                            $('#result').show();
-                            $('#copy').show();
+                            $('#error').hide();
+                            $('#result, #copy').show();
+                            $('#shorten-url').select();
                         } else {
-                            console.log(parsed_response.message)
+                            let error_message = parsed_response.message;
+
                             obj = parsed_response.fails
 
                             for (let prop in obj) {
-                                console.log(prop + ": " + obj[prop]);
+                                error_message += `${obj[prop]}`;
                             }
+
+                            $('#result, #copy').hide();
+                            $('#error').html(error_message);
+                            $('#error').show();
                         }
                     },
                 });
@@ -77,7 +86,7 @@ content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=
                     try {
                         let successful = document.execCommand('copy');
                         let msg = successful ? 'successful' : 'unsuccessful';
-                        console.log('Copying to clipboard  was ' + msg);
+                        console.log('Copying to clipboard was ' + msg);
                     } catch (err) {
                         console.error('Unable to copy', err);
                     }

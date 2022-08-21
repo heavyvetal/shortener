@@ -8,12 +8,11 @@ use App\Models\UrlShortener;
 
 class UrlShortenerController extends Controller
 {
-    /*
-     * TODO: check response 'message' property
-     * TODO: check ENV file
-     * TODO: phpdoc
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\Response
      */
-    public function makeShortUrl(Request $request, UrlShortener $url_shortener)
+    public function makeShortUrl(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'url' => [
@@ -22,19 +21,19 @@ class UrlShortenerController extends Controller
             ],
         ]);
 
-        if ($validator->fails()) {
+        if (!$validator->fails()) {
+            $url_shortener = new UrlShortener($request->get('url'));
+            $short_url = $url_shortener->makeShortUrl();
+
+            $response = [
+                "success"   => true,
+                "short_url" => $short_url
+            ];
+        } else {
             $response = [
                 "success" => false,
                 "message" => "Validation failed.",
                 "fails"   => $validator->errors()
-            ];
-        } else {
-            $short_url = $url_shortener->makeShortUrl($request->get('url'));
-
-            $response = [
-                "success"   => true,
-                "message"   => "Short url generated",
-                "short_url" => $short_url
             ];
         }
 

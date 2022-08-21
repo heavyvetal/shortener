@@ -2,41 +2,67 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-
-class UrlShortener extends Model
+class UrlShortener
 {
+    /**
+     * @var int
+     */
     private $hash_generation_attempt = 0;
 
+    /**
+     * @var string
+     */
     private $url;
 
-    public function makeShortUrl($url)
+    /**
+     * @var string
+     */
+    private $short_hash;
+
+    /**
+     * @param string $url
+     */
+    public function __construct($url)
     {
-        $short_hash = $this->generateHash($url);
-
-        while ($this->isHashCollision($url, $short_hash)) {
-            $short_hash = $this->generateHash($url);
-        }
-
-        $this->saveUrl($url, $short_hash);
-
-        return url('/') . '/' . $short_hash;
+        $this->url = $url;
     }
 
-    private function isHashCollision($url, $short_hash)
+    /**
+     * @return string
+     */
+    public function makeShortUrl()
     {
-        $collision = Uri::where('short_hash', $short_hash)->first();
+        $this->generateHash();
 
-        if (isset($collision) && $collision->url != $url) {
+        while ($this->isHashCollision()) {
+            $this->generateHash();
+        }
+
+        $this->saveUrl();
+
+        return url('/') . '/' . $this->short_hash;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isHashCollision()
+    {
+        $collision = Uri::where('short_hash', $this->short_hash)->first();
+
+        if (isset($collision) && $collision->url != $this->url) {
             return true;
         }
 
         return  false;
     }
 
-    private function generateHash($url)
+    /**
+     * @return void
+     */
+    private function generateHash()
     {
-        $encoded_hash = base64_encode(str_repeat('0', $this->hash_generation_attempt++) . hash('sha256', $url));
+        $encoded_hash = base64_encode(str_repeat('0', $this->hash_generation_attempt++) . hash('sha256', $this->url));
 
         $short_hash = '';
 
@@ -50,14 +76,17 @@ class UrlShortener extends Model
             }
         }
 
-        return $short_hash;
+        $this->short_hash = $short_hash;
     }
 
-    private function saveUrl($url, $short_hash)
+    /**
+     * @return void
+     */
+    private function saveUrl()
     {
         Uri::updateOrCreate([
-            'short_hash' => $short_hash,
-            'url' => $url
+            'short_hash' => $this->short_hash,
+            'url' => $this->url
         ]);
     }
 }
