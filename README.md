@@ -42,7 +42,7 @@ Add this code to **apache\conf\httpd.conf**
 Add such a record in **etc\drivers\hosts** 
 >127.0.0.1 test.shortener
 ***
-###Linux
+### Linux
 
 Clone git repo to /var/www.<br>
 >$ git clone https://github.com/heavyvetal/shortener.git
@@ -92,9 +92,9 @@ Insert into it this code
    
 Run these commands
 >$ sudo a2ensite test.shortener.conf
-<br>
+
 >$ sudo systemctl restart apache2
->
+
 
 After that check http://test.shortener
 
